@@ -5,8 +5,8 @@ from .SentimentAnalysisBase import SentimentAnalysisBase
 class FinbertSentiment(SentimentAnalysisBase):
 
     def __init__(self):
-        self.api_url = "https://api-inference.huggingface.co/models/ProsusAI/finbert"
-        self.api_key = os.getenv("HUGGINGFACE_API_KEY", "")
+        self.api_url = "https://router.huggingface.co/hf-inference/models/ProsusAI/finbert"
+        self.api_key = os.environ.get("HUGGINGFACE_API_KEY", "")
         super().__init__()
 
     def _query_huggingface(self, text):
