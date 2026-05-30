@@ -1,25 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stock Sentiment Analysis</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StockIQ — AI-Powered Stock Intelligence Platform</title>
+  <meta name="description" content="Production-grade AI stock intelligence platform featuring FinBERT sentiment analysis, RSI/MACD technical indicators, and portfolio tracking." />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
-<body class="bg-gray-100 min-h-screen">
-  <div class="container mx-auto py-8">
-    <div class="bg-white shadow-lg rounded-lg p-8">
-      <h1 class="text-3xl font-bold mb-4">News Sentiment and Stock Price Analysis</h1>
-      <form class="flex-auto p-6" action="analyze" method="POST" align="center">
-        <div class="flex items-center space-x-4">
-          <input id="ticker" name="ticker" type="text" placeholder="Type the stock ticker here" class="appearance-none block width=10 border-gray-30 text-black border border rounded-lg py-3 px-6">
-        </div>
-        <div class="htmx-indicator h-4 w-2 bg-blue-500 invisible rounded-full"></div>
-        <div class="flex-auto flex space-x-4">
-          <button class="bg-blue-500 text-white py-3 px-6 rounded-lg" type="submit">Show News Sentiment and Stock Price</button>
-        </div>
-      </form>
+<body>
+
+<!-- Navbar -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <div class="logo-icon">📈</div>
+      StockIQ
+    </a>
+    <div class="nav-links">
+      <a href="/" class="active">Analyze</a>
+      <a href="/portfolio">Portfolio</a>
     </div>
   </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">
+    <span>⚡</span> AI-Powered · FinBERT · Technical Analysis
+  </div>
+  <h1>Stock Intelligence<br />at Your Fingertips</h1>
+  <p>Combine real-time news sentiment, technical indicators, and AI-driven market outlooks to make smarter investment decisions.</p>
+
+  <form id="analyze-form" class="search-box" action="/analyze" method="POST" onsubmit="showLoader()">
+    <div class="input-wrapper">
+      <span class="input-icon">🔍</span>
+      <input
+        id="ticker"
+        type="text"
+        name="ticker"
+        placeholder="Enter ticker (e.g. AAPL, TSLA, INFY)"
+        autocomplete="off"
+        spellcheck="false"
+        required
+      />
+    </div>
+    <button id="analyze-btn" class="btn-primary" type="submit">
+      Analyze &rarr;
+    </button>
+  </form>
+
+  {% if error %}
+  <p style="color:var(--accent-red);margin-top:1rem;font-size:0.9rem;">⚠️ {{ error }}</p>
+  {% endif %}
+
+  <div class="feature-pills">
+    <span class="pill"><span class="dot"></span> FinBERT Sentiment</span>
+    <span class="pill"><span class="dot" style="background:var(--accent-purple)"></span> RSI · MACD · Bollinger</span>
+    <span class="pill"><span class="dot" style="background:var(--accent-amber)"></span> AI Market Outlook</span>
+    <span class="pill"><span class="dot" style="background:var(--accent-blue)"></span> Portfolio Tracker</span>
+  </div>
+</section>
+
+<!-- Loading overlay -->
+<div class="spinner-overlay" id="loader">
+  <div class="spinner"></div>
+  <p class="spinner-text">Fetching data &amp; running FinBERT analysis…</p>
+</div>
+
+<footer class="footer">
+</footer>
+
+<script>
+  function showLoader() {
+    document.getElementById('loader').classList.add('active');
+  }
+</script>
 </body>
 </html>

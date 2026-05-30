@@ -1,33 +1,135 @@
-# stock-sentiment-analysis
+# 📈 StockIQ — AI-Powered Stock Intelligence Platform
 
-```markdown
-# Building News Sentiment and Stock Price Performance Analysis NLP Application With Python
+> **Cloud & DevOps Engineering Capstone Project**  
+> *FinBERT Sentiment · RSI/MACD/Bollinger · AI Market Outlook · Portfolio Tracker · Docker · AWS ECS · GitHub Actions CI/CD*
 
-In this tutorial, we will explore a fintech idea that combines news sentiment analysis and stock trading to make news more actionable for algorithmic trading. This tutorial presents a step-by-step guide on how to engineer a solution that leverages a market data API and a sentiment score to demonstrate any correlation between news sentiment and stock price performance.
+---
 
-Traders thrive on having instant access to information that enables them to make quick decisions. Consider a scenario where a trader can promptly identify and access news that directly impacts the performance of their stocks, referred to as investor sentiment. However, reading through articles and discerning the content can be time-consuming and may result in missed opportunities. Imagine if traders could receive immediate notifications within their order management software (OMS) whenever a stock they want to trade receives positive media coverage, which could potentially influence the stock price. This idea also presents the opportunity of automating buy/sell decisions by integrating real-time news sentiment scoring into algorithmic strategies.
+## 🚀 Live Features
 
+| Feature | Technology |
+|---------|-----------|
+| **News Sentiment Analysis** | FinBERT (HuggingFace Transformers) |
+| **Technical Analysis** | RSI · MACD · Bollinger Bands · SMA 50/200 |
+| **AI Market Outlook** | Composite score from sentiment + technicals |
+| **Portfolio Tracker** | Live P&L with yfinance real-time prices |
+| **Interactive Charts** | Plotly dark-mode candlestick + indicators |
+| **Containerization** | Docker multi-stage build + Docker Compose |
+| **Cloud Deployment** | AWS ECS Fargate + ECR |
+| **CI/CD Pipeline** | GitHub Actions (Test → Build → Deploy) |
+| **Monitoring** | AWS CloudWatch logs + health checks |
 
-This application relies on a market data provider that offers stock price history and news feeds. An OMS-embedded market data solution that supports low-latency data streaming, such as Bloomberg Market Data Feed, is best suited for a real-world scenario. The OMS can then highlight securities based on the real-time news and sentiment scores, allowing a trader to make a fast decision.
+---
 
-## Data Sources
+## 🏗️ Architecture
 
-For this tutorial, we will acquire a news feed and stock price history from the Mboum Finance API market data provider available on the Rapid API Hub. We will make use of two API endpoints: "stock/history/{stock}/{interval}" for retrieving stock price history and "market/news/{stock}" for obtaining the stock news feed.
+```
+Browser → AWS ECS Fargate (Flask/Gunicorn)
+                ├── Alpha Vantage API  (news + price)
+                ├── yfinance           (RSI/MACD/BB)
+                └── AWS CloudWatch     (monitoring)
 
+GitHub Push → GitHub Actions → ECR → ECS Rolling Deploy
+```
 
-## Implementation
+---
 
-Once the user submits the ticker, the form invokes the Python Flask `/analyze` API route. The implementation includes the following logic flow:
+## ⚡ Quick Start (Local)
 
-1. Retrieve stock news feed from Mboum Finance API.
-2. Calculate news sentiment scores using Python's Pandas and Natural Language Processing (NLP) libraries.
-3. Visualize sentiment scores using the Plotly library for creating a bar graph.
-4. Retrieve the earliest news date to be used to filter out all stock prices outside that period.
-5. Retrieve stock price history from Mboum Finance API.
-6. Visualize the stock price using the Plotly library for creating a line graph.
-7. Change the Headline column to clickable links.
-8. Render consolidated results in the `analysis.html` template.
+### With Docker (Recommended)
 
+```bash
+cd code/
+docker compose up --build
+```
+Open http://localhost:5000
 
-## Result Visualization
-![Trading](https://raw.githubusercontent.com/dshilman/stock-sentiment-analysis/master/trading.png)
+### Without Docker
+
+```bash
+cd code/
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+python app.py
+```
+
+---
+
+## ☁️ Cloud Deployment (AWS)
+
+See the full step-by-step guide in [deployment_guide.md](../deployment_guide.md).
+
+**Short version:**
+1. Create ECR repo + ECS cluster in AWS Console
+2. Add `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` to GitHub Secrets
+3. Push to `main` — GitHub Actions handles the rest automatically
+
+---
+
+## 🔄 CI/CD Pipeline
+
+```
+git push origin main
+       ↓
+[Job 1] Lint + Health Check Test
+       ↓
+[Job 2] docker build → push to ECR  
+       ↓
+[Job 3] Update ECS task definition → Rolling deploy
+       ↓
+✅ Live on AWS
+```
+
+---
+
+## 📁 Project Structure
+
+```
+code/
+├── app.py                  # Flask application (routes + orchestration)
+├── technical_analysis.py   # RSI, MACD, Bollinger Bands engine
+├── portfolio.py            # Portfolio P&L tracker
+├── alpha_api.py            # Alpha Vantage integration
+├── sentiment/
+│   ├── FinbertSentiment.py # FinBERT NLP sentiment scoring
+│   └── SentimentAnalysisBase.py
+├── templates/
+│   ├── index.html          # Landing page
+│   ├── analysis.html       # Full analysis dashboard
+│   └── portfolio.html      # Portfolio tracker
+├── static/css/style.css    # Premium dark UI
+├── Dockerfile              # Multi-stage production build
+├── docker-compose.yml      # App + MongoDB orchestration
+└── requirements.txt
+.github/workflows/
+└── deploy.yml              # GitHub Actions CI/CD
+```
+
+---
+
+## 🛠️ Tech Stack
+
+**Backend:** Python 3.11 · Flask · Gunicorn  
+**AI/ML:** FinBERT (ProsusAI) · HuggingFace Transformers · PyTorch  
+**Data:** Alpha Vantage API · yfinance (Yahoo Finance)  
+**Frontend:** HTML5 · Vanilla CSS (glassmorphism dark mode) · Plotly.js  
+**DevOps:** Docker · Docker Compose · GitHub Actions  
+**Cloud:** AWS ECS Fargate · AWS ECR · AWS CloudWatch · AWS IAM  
+**Database:** MongoDB (Docker Compose)
+
+---
+
+## 📊 API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | Landing page |
+| POST | `/analyze` | Full stock analysis |
+| GET | `/portfolio` | Portfolio dashboard |
+| POST | `/api/portfolio/add` | Add holding (JSON) |
+| POST | `/api/portfolio/remove` | Remove holding (JSON) |
+| GET | `/health` | Health check (ECS/ALB) |
+
+---
+
+*Built as a Cloud & DevOps Engineering Capstone demonstrating end-to-end production deployment.*

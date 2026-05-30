@@ -1,4 +1,6 @@
 flask
+flask-pymongo
+flask-jwt-extended
 requests
 pandas
 matplotlib
@@ -9,5 +11,7 @@ plotly
 gunicorn
 numpy
 python-dotenv
-torch
-transformers
+yfinance
+pymongo
+bcrypt
+pytz

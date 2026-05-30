@@ -1,64 +1,200 @@
-<!doctype html>
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<center>
-		<title>Stock Sentiment Analysis</title>
-	</center>
-	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
-	<script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StockIQ — Analysis: {{ ticker }}</title>
+  <meta name="description" content="AI-powered stock analysis for {{ ticker }} including sentiment, technical indicators, and market outlook." />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
+<body>
 
-<body class="bg-gray-100 min-h-screen">
-	<div class="container mx-auto py-8">
-		<div class="bg-white shadow-lg rounded-lg p-8">
-			<h1 class="text-3xl font-bold mb-4">Stock Sentiment Analysis for {{ticker}}</h1>
-			<div class="flex items-center space-x-4"></div>
-			<table align="center">
-				<tr>
-					<td>
-						<div class="flex items-center space-x-2">
-							<div id="chart" class="chart"></div>
-						</div>
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<div class="flex items-center space-x-2">
-							<div id="chart2" class="chart2"></div>
-						</div>
-					</td>
-				</tr>
-			</table>
+<!-- Navbar -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo">
+      <div class="logo-icon">📈</div>
+      StockIQ
+    </a>
+    <div class="nav-links">
+      <a href="/">Analyze</a>
+      <a href="/portfolio">Portfolio</a>
+    </div>
+  </div>
+</nav>
 
-			<div class="htmx-indicator h-2 w-2 bg-blue-500 invisible rounded-full"></div>
+<div class="container">
+  <a href="/" class="back-link">← Back to Search</a>
 
-			<div class="flex items-center space-x-4">
-				The above chart averages the sentiment scores and price of {{ticker}} stock.
-				The table below gives each of the most recent headlines of the stock and the negative, neutral, positive
-				and an aggregated sentiment score.
-				The news headlines are obtained from Mboum Finance API.
-			</div>
-			<div class="flex items-center space-x-4">
-				{{ table|safe }}
-			</div>
-			<div class="htmx-indicator h-4 w-2 bg-blue-500 invisible rounded-full"></div>
-			<div class="flex items-center space-x-4">
-				<a class="underline" href="/">Back</a>
-			</div>
-		</div>
-	</div>
-</body>
+  <!-- Page Title -->
+  <div class="page-title animate-in">
+    Analysis Report &nbsp;<span class="ticker-pill">{{ ticker }}</span>
+    {% if current_price != 'N/A' %}
+    <span style="font-size:1rem;font-weight:500;color:var(--text-secondary);margin-left:8px;">
+      ${{ current_price }}
+    </span>
+    {% endif %}
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-grid animate-in">
+    <div class="stat-card">
+      <div class="stat-label">RSI (14)</div>
+      <div class="stat-value" style="color:
+        {% if rsi > 70 %}var(--accent-red)
+        {% elif rsi < 30 %}var(--accent-green)
+        {% else %}var(--accent-blue){% endif %}">
+        {{ rsi }}
+      </div>
+      <div class="stat-sub">{{ rsi_label | capitalize }}</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">MACD Signal</div>
+      <div class="stat-value" style="color:
+        {% if macd_signal == 'bullish' %}var(--accent-green){% else %}var(--accent-red){% endif %}">
+        {{ macd_signal | capitalize }}
+      </div>
+      <div class="stat-sub">Momentum trend</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">vs SMA-50</div>
+      <div class="stat-value" style="color:
+        {% if price_vs_sma50 == 'above' %}var(--accent-green){% else %}var(--accent-red){% endif %}">
+        {{ price_vs_sma50 | capitalize }}
+      </div>
+      <div class="stat-sub">Price position</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Avg Sentiment</div>
+      <div class="stat-value" style="color:
+        {% if avg_sentiment > 0.1 %}var(--accent-green)
+        {% elif avg_sentiment < -0.1 %}var(--accent-red)
+        {% else %}var(--accent-amber){% endif %}">
+        {{ "%+.3f" | format(avg_sentiment) }}
+      </div>
+      <div class="stat-sub">FinBERT score</div>
+    </div>
+  </div>
+
+  <!-- AI Market Outlook -->
+  <div class="outlook-card animate-in">
+    <div class="outlook-header">
+      <span class="outlook-badge">🤖 AI Market Outlook</span>
+      <span style="font-size:0.78rem;color:var(--text-muted);">Composite: Sentiment + RSI + MACD + SMA</span>
+    </div>
+    <div class="outlook-content">
+      <div class="outlook-score-wrap">
+        <div class="outlook-emoji">{{ outlook.emoji }}</div>
+        <div class="outlook-score" style="color:{{ outlook.color }}">{{ outlook.score }}</div>
+        <div class="outlook-label" style="color:{{ outlook.color }}">{{ outlook.label }}</div>
+        <div class="outlook-bar-wrap">
+          <div class="outlook-bar-track">
+            <div class="outlook-bar-fill" id="outlook-bar" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:1.2rem;line-height:1.7;">
+          {{ outlook.description }}
+        </p>
+        <ul class="outlook-factors">
+          <li>
+            <span class="factor-dot {% if avg_sentiment > 0 %}green{% elif avg_sentiment < 0 %}red{% else %}amber{% endif %}"></span>
+            News Sentiment: <strong style="color:var(--text-primary);margin-left:4px;">{{ "%+.3f" | format(avg_sentiment) }}</strong>
+          </li>
+          <li>
+            <span class="factor-dot {% if rsi > 70 %}red{% elif rsi < 30 %}green{% else %}blue{% endif %}"></span>
+            RSI: <strong style="color:var(--text-primary);margin-left:4px;">{{ rsi }} ({{ rsi_label }})</strong>
+          </li>
+          <li>
+            <span class="factor-dot {% if macd_signal == 'bullish' %}green{% else %}red{% endif %}"></span>
+            MACD: <strong style="color:var(--text-primary);margin-left:4px;">{{ macd_signal | capitalize }}</strong>
+          </li>
+          <li>
+            <span class="factor-dot {% if price_vs_sma50 == 'above' %}green{% else %}red{% endif %}"></span>
+            SMA-50: <strong style="color:var(--text-primary);margin-left:4px;">Price {{ price_vs_sma50 }} moving average</strong>
+          </li>
+        </ul>
+        <p style="font-size:0.7rem;color:var(--text-muted);margin-top:1rem;">
+          ⚠️ This is an AI-generated market outlook for educational purposes only. Not financial advice.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Technical Analysis Chart (full width) -->
+  <div class="card animate-in" style="margin-bottom:1.25rem;">
+    <div class="card-header">
+      <div class="card-title">
+        <div class="card-icon amber">📊</div>
+        Technical Analysis — RSI · MACD · Bollinger Bands
+      </div>
+    </div>
+    <div id="chart-tech"></div>
+  </div>
+
+  <!-- Price + Sentiment Charts side by side -->
+  <div class="charts-row animate-in">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon blue">💹</div>
+          Intraday Price History
+        </div>
+      </div>
+      <div id="chart-price"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon purple">🧠</div>
+          FinBERT Sentiment Scores
+        </div>
+      </div>
+      <div id="chart-sentiment"></div>
+    </div>
+  </div>
+
+  <!-- News Table -->
+  <div class="card animate-in">
+    <div class="card-header">
+      <div class="card-title">
+        <div class="card-icon green">📰</div>
+        Latest News Headlines
+      </div>
+    </div>
+    <div class="table-wrapper">
+      {{ table | safe }}
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<footer class="footer">
+</footer>
 
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-<script type="text/javascript">
-	var graph_hourly = {{ graph_sentiment | safe}};
-	Plotly.plot('chart', graph_hourly, {});
+<script>
+  // Render charts
+  var techData = {{ graph_tech | safe }};
+  Plotly.newPlot('chart-tech', techData.data, techData.layout, {responsive: true, displayModeBar: false});
 
-	var graph_price = {{ graph_price | safe}};
-	Plotly.newPlot('chart2', graph_price, {});
+  var priceData = {{ graph_price | safe }};
+  Plotly.newPlot('chart-price', priceData.data, priceData.layout, {responsive: true, displayModeBar: false});
+
+  var sentimentData = {{ graph_sentiment | safe }};
+  Plotly.newPlot('chart-sentiment', sentimentData.data, sentimentData.layout, {responsive: true, displayModeBar: false});
+
+  // Animate outlook bar
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      document.getElementById('outlook-bar').style.width = '{{ outlook.score }}%';
+    }, 200);
+  });
 </script>
-
+</body>
 </html>

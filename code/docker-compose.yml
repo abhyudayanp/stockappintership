@@ -1,0 +1,54 @@
+services:
+  # ── Flask Application ─────────────────────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stockiq-app
+    image: stockiq:latest
+    ports:
+      - "8080:5000"
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-stock-intelligence-local-dev}
+      - ALPHA_VANTAGE_KEY=${ALPHA_VANTAGE_KEY:-1UDC3X7DCJPBZNTW}
+      - FINNHUB_KEY=${FINNHUB_KEY:-d8dj4g1r01qhm4af6kfgd8dj4g1r01qhm4af6kg0}
+      - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY}
+      - FLASK_ENV=production
+    volumes:
+      # Persist portfolio data locally
+      - portfolio-data:/app/data
+    depends_on:
+      - mongo
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]  # internal port stays 5000
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - stockiq-net
+
+  # ── MongoDB (for future auth / caching) ───────────────
+  mongo:
+    image: mongo:7.0
+    container_name: stockiq-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-stockiq_secret}
+      MONGO_INITDB_DATABASE: stockiq
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+    networks:
+      - stockiq-net
+
+volumes:
+  mongo-data:
+  portfolio-data:
+
+networks:
+  stockiq-net:
+    driver: bridge

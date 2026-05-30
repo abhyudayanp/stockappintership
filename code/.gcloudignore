@@ -1,0 +1,21 @@
+# Ignore Python cache and virtual environment
+__pycache__/
+*.py[cod]
+venv/
+
+# Ignore Jupyter and notebook outputs
+*.ipynb
+*.log
+*.tmp
+
+# Ignore Git
+.git/
+.gitignore
+
+# Ignore IDE/editor files
+.vscode/
+.DS_Store
+
+# Ignore system and backup files
+*.bak
+*.swp

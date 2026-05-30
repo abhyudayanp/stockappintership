@@ -1,0 +1,12 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.*
+*.log
+.DS_Store
+Archive.zip
+code.zip
+*.ipynb
+portfolio_data.json
