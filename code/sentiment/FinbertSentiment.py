@@ -16,19 +16,29 @@ class FinbertSentiment(SentimentAnalysisBase):
             
         headers = {"Authorization": f"Bearer {self.api_key}"}
         payload = {"inputs": text}
-        try:
-            response = requests.post(self.api_url, headers=headers, json=payload, timeout=5)
-            if response.status_code == 200:
-                result = response.json()
-                # The API usually returns a list of lists: [[{'label': 'positive', 'score': 0.8}, ...]]
-                if isinstance(result, list) and len(result) > 0:
-                    if isinstance(result[0], list):
-                        return result[0]
-                    return result
-            print(f"HuggingFace API error: {response.status_code} - {response.text}")
-        except Exception as e:
-            print(f"HuggingFace API exception: {e}")
-            
+        
+        import time
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = requests.post(self.api_url, headers=headers, json=payload, timeout=30)
+                if response.status_code == 200:
+                    result = response.json()
+                    if isinstance(result, list) and len(result) > 0:
+                        if isinstance(result[0], list):
+                            return result[0]
+                        return result
+                elif response.status_code == 503:
+                    print(f"HuggingFace model loading (attempt {attempt+1}/{max_retries}). Waiting 15s...")
+                    time.sleep(15)
+                    continue
+                else:
+                    print(f"HuggingFace API error: {response.status_code} - {response.text}")
+                    break
+            except Exception as e:
+                print(f"HuggingFace API exception: {e}")
+                break
+                
         return [{'label': 'neutral', 'score': 1.0}]
 
     def calc_sentiment_score(self):
