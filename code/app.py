@@ -11,6 +11,9 @@ import json
 import logging
 import os
 
+# Render deployment fix: Make sure yfinance caches to /tmp where it has write access
+os.environ["YFINANCE_CACHE_DIR"] = "/tmp/yfinance"
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go

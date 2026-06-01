@@ -9,9 +9,14 @@ import os
 import yfinance as yf
 from datetime import datetime
 
-# Store in a /data subdirectory so Docker volume mounts don't collide with the file
-DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
-os.makedirs(DATA_DIR, exist_ok=True)
+# Store in a /data subdirectory, fallback to /tmp for read-only environments (like Render)
+try:
+    DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
+    os.makedirs(DATA_DIR, exist_ok=True)
+except OSError:
+    DATA_DIR = "/tmp/data"
+    os.makedirs(DATA_DIR, exist_ok=True)
+    
 PORTFOLIO_FILE = os.path.join(DATA_DIR, "portfolio_data.json")
 
 
